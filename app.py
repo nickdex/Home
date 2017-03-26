@@ -29,6 +29,7 @@ def webhook():
     res = processRequest(req)
 
     res = json.dumps(res, indent=4)
+    print("Response:")
     print(res)
     r= make_response(res)
     r.headers['Content-Type'] = 'application/json'
@@ -42,43 +43,35 @@ def processRequest(request):
     data = None
     action = result.get('action')
 
-    status = light(action)
+    return makeWebhookResult(action)
 
-    return makeWebhookResult(status)
-
-def light(action):
-    if action is None:
-        return 'FAIL'
-    elif action == 'lightOn':
-        led.on()
-        return 'LIGHT_ON'
-    elif action == 'lightOff':
-        led.off()
-        return 'LIGHT_OFF'
-
-
-def makeWebhookResult(status):
-    speech = None
-    if (status is None) or status == 'FAIL':
-        speech = "Please try again"
-    if status == 'LIGHT_ON':
-        if lightSwitch is True:
-            speech = "Light is already on"
-        else:
-            speech = "Light has been turned on"
-            lightSwitch = True
-    elif status == "LIGHT_OFF":
-        if lightSwitch is False:
-            speech = "Light is already off"
-        else:
-            speech = "Light has been turned off"
-            lightSwitch = False
+def makeWebhookResult(action):
+    speech = light(action, lightSwitch)
 
     return {
-        "speech": speech,
-        "displayText": speech,
-        "source": "home-bot"
+    "speech": speech,
+    "displayText": speech,
+    "source": "home-bot"
     }
+
+def handleLightAction(action, lightSwitch):
+    if action is None:
+        return "Please try again"
+    elif action == 'lightOn':
+        if lightSwitch:
+            return "Light is already on"
+        else:
+            lightSwitch = True
+            led.on()
+            return "Light has been turned on"
+    elif action == 'lightOff':
+        if not lightSwitch:
+            return "Light is already off"
+        else:
+            lightSwitch = False
+            led.off()
+            return "Light has been turned off"
+
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
