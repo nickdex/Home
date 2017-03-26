@@ -13,6 +13,8 @@ app = Flask(__name__)
 # GPIO 17 for led
 led = LED(17)
 
+lightSwitch = False
+
 @app.route('/')
 def home_page():
     return "Welcome to Home bot"
@@ -40,15 +42,14 @@ def processRequest(request):
     data = None
     action = result.get('action')
 
-    if action is None:
-        return {}
-    else:
-        status = light(action)
+    status = light(action)
 
     return makeWebhookResult(status)
 
 def light(action):
-    if action == 'lightOn':
+    if action is None:
+        return 'FAIL'
+    elif action == 'lightOn':
         led.on()
         return 'LIGHT_ON'
     elif action == 'lightOff':
@@ -61,9 +62,15 @@ def makeWebhookResult(status):
     if (status is None) or status == 'FAIL':
         speech = "Please try again"
     if status == 'LIGHT_ON':
-        speech = "Light has been turned on"
+        if lightSwitch is True:
+            speech = "Light is already on"
+        else:
+            speech = "Light has been turned on"
     elif status == "LIGHT_OFF":
-        speech = "Light has been turned off"
+        if lightSwitch is False:
+            speech = "Light is already off"
+        else:
+            speech = "Light has been turned off"
 
     return {
         "speech": speech,
