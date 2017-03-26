@@ -66,11 +66,13 @@ def makeWebhookResult(status):
             speech = "Light is already on"
         else:
             speech = "Light has been turned on"
+            lightSwitch = True
     elif status == "LIGHT_OFF":
         if lightSwitch is False:
             speech = "Light is already off"
         else:
             speech = "Light has been turned off"
+            lightSwitch = False
 
     return {
         "speech": speech,
