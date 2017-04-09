@@ -12,11 +12,11 @@ from flask import make_response
 # Flask app starts in global layout
 app = Flask(__name__)
 
-# # Initialize db
-# db = TinyDB('db.json')
-#
-# # GPIO 17 for led
-# led = LED(17)
+# Initialize db
+db = TinyDB('db.json')
+
+# GPIO 17 for led
+led = LED(17)
 
 @app.route('/')
 def home_page():
@@ -49,7 +49,7 @@ def processRequest(request):
     return makeWebhookResult(action)
 
 def makeWebhookResult(action):
-    speech = light(action)
+    speech = handleLightAction(action)
 
     return {
     "speech": speech,
