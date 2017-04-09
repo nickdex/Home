@@ -12,6 +12,10 @@ from flask import make_response
 # Flask app starts in global layout
 app = Flask(__name__)
 
+# Global Variables
+ON_ACTION = 'deviceOn'
+OFF_ACTION = 'deviceOff'
+
 # Initialize db
 db = TinyDB('db.json')
 
@@ -61,14 +65,14 @@ def handleLightAction(action):
     msg = ''
     if action is None:
         return "Please try again"
-    elif action == 'lightOn':
+    elif action == ON_ACTION:
         if getSwitchState('light1'):
             return "Light is already on"
         else:
             led.on()
             updateSwitchState('light1', True)
             return "Light has been turned on"
-    elif action == 'lightOff':
+    elif action == OFF_ACTION:
         if not getSwitchState('light1'):
             return "Light is already off"
         else:
