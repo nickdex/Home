@@ -58,35 +58,47 @@ def makeWebhookResult(action):
     }
 
 def handleLightAction(action):
+    print('handleLightAction')
+    msg = ''
     if action is None:
         return "Please try again"
     elif action == 'lightOn':
+        print('action ' + action)
         if getSwitchState('light1'):
-            return "Light is already on"
+            msg = "Light is already on"
+            print(msg)
+            return msg
         else:
             led.on()
-            db.insert()
-            return "Light has been turned on"
+            updateSwitchState('light1', True)
+            msg = "Light has been turned on"
+            print(msg)
+            return msg
     elif action == 'lightOff':
+        print('action ' + action)
         if not getSwitchState('light1'):
-            return "Light is already off"
+            msg = "Light is already off"
+            print(msg)
+            return msg
         else:
             led.off()
-            return "Light has been turned off"
+            updateSwitchState('light1', False)
+            msg = "Light has been turned off"
+            print(msg)
+            return msg
+    return "Action not recognized"
 
 def getSwitchState(light):
-    result = db.search(query.type == light)[0]
+    result = db.search(Query().type == light)[0]
     return result['state']
+
+def updateSwitchState(light, state):
+    db.update({'state':state}, Query().type == light)
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
 
     db.insert({'type':'light1', 'state':False})
-    # Initialize db
-    db = TinyDB('db.json')
-
-    # GPIO 17 for led
-    led = LED(17)
 
     print("Starting app on port %d" % port)
 
