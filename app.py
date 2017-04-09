@@ -3,6 +3,8 @@ import os
 
 from gpiozero import LED
 
+from tinydb import TinyDB, Query
+
 from flask import Flask
 from flask import request
 from flask import make_response
@@ -10,8 +12,11 @@ from flask import make_response
 # Flask app starts in global layout
 app = Flask(__name__)
 
-# GPIO 17 for led
-led = LED(17)
+# # Initialize db
+# db = TinyDB('db.json')
+#
+# # GPIO 17 for led
+# led = LED(17)
 
 @app.route('/')
 def home_page():
@@ -56,21 +61,32 @@ def handleLightAction(action):
     if action is None:
         return "Please try again"
     elif action == 'lightOn':
-        if led.is_lit:
+        if getSwitchState('light1'):
             return "Light is already on"
         else:
             led.on()
+            db.insert()
             return "Light has been turned on"
     elif action == 'lightOff':
-        if not led.is_lit:
+        if not getSwitchState('light1'):
             return "Light is already off"
         else:
             led.off()
             return "Light has been turned off"
 
+def getSwitchState(light):
+    result = db.search(query.type == light)[0]
+    return result['state']
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
+
+    db.insert({'type':'light1', 'state':False})
+    # Initialize db
+    db = TinyDB('db.json')
+
+    # GPIO 17 for led
+    led = LED(17)
 
     print("Starting app on port %d" % port)
 
