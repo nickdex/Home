@@ -15,12 +15,15 @@ app = Flask(__name__)
 # Global Variables
 ON_ACTION = 'deviceOn'
 OFF_ACTION = 'deviceOff'
+LIGHT = 'light'
+FAN = 'fan'
 
 # Initialize db
 db = TinyDB('db.json')
 
 # GPIO 17 for led
 led = LED(17)
+fan = LED(18)
 
 @app.route('/')
 def home_page():
@@ -50,10 +53,13 @@ def processRequest(request):
     data = None
     action = result.get('action')
 
-    return makeWebhookResult(action)
+    deviceType = result.get('parameters').get('device')
+    print('processRequest: ' + deviceType)
 
-def makeWebhookResult(action):
-    speech = handleLightAction(action)
+    return makeWebhookResult(action, deviceType)
+
+def makeWebhookResult(action, deviceType):
+    speech = handleLightAction(action, deviceType)
 
     return {
     "speech": speech,
@@ -61,24 +67,35 @@ def makeWebhookResult(action):
     "source": "home-bot"
     }
 
-def handleLightAction(action):
+def handleLightAction(action, deviceType):
     msg = ''
+    device = ''
+    if deviceType == FAN:
+        device = FAN
+    else:
+        device = LIGHT
     if action is None:
         return "Please try again"
     elif action == ON_ACTION:
-        if getSwitchState('light1'):
-            return "Light is already on"
+        if getSwitchState(device):
+            return "{} is already on".format(deviceType)
         else:
-            led.on()
-            updateSwitchState('light1', True)
-            return "Light has been turned on"
+            if deviceType == FAN:
+                fan.on()
+            else:
+                led.on()
+            updateSwitchState(device, True)
+            return "{} has been turned on".format(deviceType)
     elif action == OFF_ACTION:
-        if not getSwitchState('light1'):
-            return "Light is already off"
+        if not getSwitchState(device):
+            return "{} is already off".format(deviceType)
         else:
-            led.off()
-            updateSwitchState('light1', False)
-            return "Light has been turned off"
+            if deviceType == FAN:
+                fan.off()
+            else:
+                led.off()
+            updateSwitchState(device, False)
+            return "{} has been turned off".format(deviceType)
     return "Action not recognized"
 
 def getSwitchState(light):
@@ -92,7 +109,8 @@ if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
 
     db.purge()
-    db.insert({'type':'light1', 'state':False})
+    db.insert({'type':'fan', 'state':False})
+    db.insert({'type':'light', 'state':False})
 
     print("Starting app on port %d" % port)
 
