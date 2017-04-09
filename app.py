@@ -58,34 +58,23 @@ def makeWebhookResult(action):
     }
 
 def handleLightAction(action):
-    print('handleLightAction')
     msg = ''
     if action is None:
         return "Please try again"
     elif action == 'lightOn':
-        print('action ' + action)
         if getSwitchState('light1'):
-            msg = "Light is already on"
-            print(msg)
-            return msg
+            return "Light is already on"
         else:
             led.on()
             updateSwitchState('light1', True)
-            msg = "Light has been turned on"
-            print(msg)
-            return msg
+            return "Light has been turned on"
     elif action == 'lightOff':
-        print('action ' + action)
         if not getSwitchState('light1'):
-            msg = "Light is already off"
-            print(msg)
-            return msg
+            return "Light is already off"
         else:
             led.off()
             updateSwitchState('light1', False)
-            msg = "Light has been turned off"
-            print(msg)
-            return msg
+            return "Light has been turned off"
     return "Action not recognized"
 
 def getSwitchState(light):
@@ -98,6 +87,7 @@ def updateSwitchState(light, state):
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
 
+    db.purge()
     db.insert({'type':'light1', 'state':False})
 
     print("Starting app on port %d" % port)
