@@ -59,7 +59,7 @@ def processRequest(request):
     return makeWebhookResult(action, deviceType)
 
 def makeWebhookResult(action, deviceType):
-    speech = handleLightAction(action, deviceType)
+    speech = handleAction(action, deviceType)
 
     return {
     "speech": speech,
@@ -67,50 +67,60 @@ def makeWebhookResult(action, deviceType):
     "source": "home-bot"
     }
 
-def handleLightAction(action, deviceType):
-    msg = ''
-    device = ''
-    if deviceType == FAN:
-        device = FAN
-    else:
-        device = LIGHT
+def handleAction(action, deviceType):
+    device = getLocalDeviceType(deviceType)
+
     if action is None:
-        return "Please try again"
+        return "Action not found"
     elif action == ON_ACTION:
-        if getSwitchState(device):
-            return "{} is already on".format(deviceType)
-        else:
-            if deviceType == FAN:
-                fan.on()
-            else:
-                led.on()
-            updateSwitchState(device, True)
-            return "{} has been turned on".format(deviceType)
+        return handleOnAction(device)
     elif action == OFF_ACTION:
-        if not getSwitchState(device):
-            return "{} is already off".format(deviceType)
-        else:
-            if deviceType == FAN:
-                fan.off()
-            else:
-                led.off()
-            updateSwitchState(device, False)
-            return "{} has been turned off".format(deviceType)
+        return handleOffAction(device)
     return "Action not recognized"
 
-def getSwitchState(light):
-    result = db.search(Query().type == light)[0]
+# device methods
+def getLocalDeviceType(deviceFromRequest):
+    if deviceType == FAN:
+        return FAN
+    else:
+        return LIGHT
+
+def handleOnAction(device):
+    if getSwitchState(device):
+        return "{} is already on".format(device)
+    else:
+        turnDeviceOn(device)
+        updateSwitchState(device, True)
+        return "{} has been turned on".format(device)
+
+def handleOffAction(device):
+    if not getSwitchState(device):
+        return "{} is already off".format(device)
+    else:
+        turnDeviceOff(device)
+        updateSwitchState(device, False)
+        return "{} has been turned off".format(device)
+
+def turnDeviceOn(device):
+    device.on()
+
+def turnDeviceOff(device):
+    device.off()
+
+def getSwitchState(device):
+    result = db.search(Query().device_type == device)[0]
     return result['state']
 
-def updateSwitchState(light, state):
-    db.update({'state':state}, Query().type == light)
+def updateSwitchState(device, state):
+    db.update({'state':state}, Query().device_type == device)
+# end region
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
 
     db.purge()
-    db.insert({'type':'fan', 'state':False})
-    db.insert({'type':'light', 'state':False})
+    db.insert({'device_type':FAN, 'state':False})
+    db.insert({'device_type':LIGHT, 'state':False})
 
     print("Starting app on port %d" % port)
 
