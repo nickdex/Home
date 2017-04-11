@@ -9,6 +9,8 @@ from flask import Flask
 from flask import request
 from flask import make_response
 
+from device import Device
+
 # Flask app starts in global layout
 app = Flask(__name__)
 
@@ -68,52 +70,15 @@ def makeWebhookResult(action, deviceType):
     }
 
 def handleAction(action, deviceType):
-    device = getLocalDeviceType(deviceType)
+    device = Device(deviceType)
 
     if action is None:
         return "Action not found"
     elif action == ON_ACTION:
-        return handleOnAction(device)
+        return device.on()
     elif action == OFF_ACTION:
-        return handleOffAction(device)
+        return device.off()
     return "Action not recognized"
-
-# device methods
-def getLocalDeviceType(deviceFromRequest):
-    if deviceType == FAN:
-        return FAN
-    else:
-        return LIGHT
-
-def handleOnAction(device):
-    if getSwitchState(device):
-        return "{} is already on".format(device)
-    else:
-        turnDeviceOn(device)
-        updateSwitchState(device, True)
-        return "{} has been turned on".format(device)
-
-def handleOffAction(device):
-    if not getSwitchState(device):
-        return "{} is already off".format(device)
-    else:
-        turnDeviceOff(device)
-        updateSwitchState(device, False)
-        return "{} has been turned off".format(device)
-
-def turnDeviceOn(device):
-    device.on()
-
-def turnDeviceOff(device):
-    device.off()
-
-def getSwitchState(device):
-    result = db.search(Query().device_type == device)[0]
-    return result['state']
-
-def updateSwitchState(device, state):
-    db.update({'state':state}, Query().device_type == device)
-# end region
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
