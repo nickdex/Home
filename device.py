@@ -1,8 +1,13 @@
 from tinydb import TinyDB, Query
 from gpiozero import LED
 
+LIGHT = 'light'
+FAN = 'fan'
+
 LED_PIN = 17
 FAN_PIN = 18
+
+db = TinyDB('db.json')
 
 class Device:
     def __init__(self, name):
@@ -29,11 +34,9 @@ class Device:
             updateSwitchState(False)
             return "{} has been turned off".format(self.type)
 
-# device methods
 def getSwitchState():
     result = db.search(Query().device_type == self.type)[0]
     return result['state']
 
 def updateSwitchState(state):
     db.update({'state':state}, Query().device_type == self.type)
-# end region

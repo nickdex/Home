@@ -1,8 +1,6 @@
 import json
 import os
 
-from gpiozero import LED
-
 from tinydb import TinyDB, Query
 
 from flask import Flask
@@ -22,10 +20,6 @@ FAN = 'fan'
 
 # Initialize db
 db = TinyDB('db.json')
-
-# GPIO 17 for led
-led = LED(17)
-fan = LED(18)
 
 @app.route('/')
 def home_page():
